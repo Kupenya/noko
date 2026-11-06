@@ -1,0 +1,7 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+html{scroll-behavior:smooth} body{background:#FAF7F2;color:#1E2B2C}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.inp{width:100%;border:1px solid #d9d2c7;border-radius:6px;padding:.6rem .75rem;background:#fff}
+.inp:focus{outline:2px solid #B87333;outline-offset:1px}
+.btn{background:#0F5257;color:#fff;padding:.7rem 1.4rem;border-radius:6px;font-weight:500}
+.btn:hover{background:#0b3f43}.btn:disabled{opacity:.5}
