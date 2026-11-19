@@ -37,7 +37,7 @@ create table if not exists color_palette (id bigint generated always as identity
 create table if not exists registry_items (id bigint generated always as identity primary key, position int not null default 0, name text not null, description text not null default '', price numeric(12,2) not null default 0, image text, active boolean not null default true, created_at timestamptz not null default now());
 create table if not exists gallery_images (id bigint generated always as identity primary key, position int not null default 0, image text not null, caption text, created_at timestamptz not null default now());
 create table if not exists faqs (id bigint generated always as identity primary key, position int not null default 0, question text not null, answer text not null, created_at timestamptz not null default now());
-create table if not exists rsvps (id bigint generated always as identity primary key, name text not null, email text unique not null, attending boolean not null, guests int not null default 1 check (guests between 0 and 10), dietary text, message text, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create table if not exists rsvps (id bigint generated always as identity primary key, name text not null, email text unique not null, attending boolean not null, guests int not null default 1 check (guests between 0 and 10), dietary text, message text, invitation_id bigint, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
 create table if not exists reservations (id bigint generated always as identity primary key, item_id bigint not null references registry_items(id) on delete cascade, guest_name text, display_name text not null, status text not null default 'pending' check (status in ('pending','confirmed','removed')), created_at timestamptz not null default now());
 create table if not exists password_reset_tokens (
   token_hash text primary key,
@@ -94,3 +94,6 @@ create table if not exists invitations (
 );
 
 create index if not exists invitations_code_idx on invitations(code);
+
+alter table rsvps add column if not exists invitation_id bigint;
+create unique index if not exists rsvps_one_per_invitation_idx on rsvps(invitation_id) where invitation_id is not null;

@@ -69,6 +69,7 @@ export default function RsvpForm() {
     setChecking(false);
     if (!r.ok) {
       setValidated(false);
+      setCode("");
       setErr(body.error || "This invitation could not be validated.");
       return;
     }
