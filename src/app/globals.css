@@ -1,7 +1,47 @@
-@tailwind base; @tailwind components; @tailwind utilities;
-html{scroll-behavior:smooth} body{background:#FAF7F2;color:#1E2B2C}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-.inp{width:100%;border:1px solid #d9d2c7;border-radius:6px;padding:.6rem .75rem;background:#fff}
-.inp:focus{outline:2px solid #B87333;outline-offset:1px}
-.btn{background:#0F5257;color:#fff;padding:.7rem 1.4rem;border-radius:6px;font-weight:500}
-.btn:hover{background:#0b3f43}.btn:disabled{opacity:.5}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+body { background: var(--wedding-cream, #f8f5ef); color: #1d2928; }
+::selection { background: #d6b4a5; color: #183330; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+.inp {
+  width: 100%;
+  border: 1px solid #ddd7cc;
+  border-radius: 12px;
+  background: rgba(255,255,255,.82);
+  padding: .78rem .9rem;
+  color: #1d2928;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.inp::placeholder { color: #9a968d; }
+.inp:focus { outline: none; border-color: #b38a62; background: #fff; box-shadow: 0 0 0 4px rgba(179,138,98,.1); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 9999px;
+  background: #173f3b;
+  color: #fff;
+  padding: .75rem 1.5rem;
+  font-size: .78rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  transition: transform .2s, background .2s, box-shadow .2s;
+}
+.btn:hover { background: #23554f; transform: translateY(-1px); box-shadow: 0 12px 24px rgba(23,63,59,.14); }
+.btn:disabled { opacity: .55; transform: none; box-shadow: none; }
+
+.paper-grain { background-image: radial-gradient(rgba(95,73,49,.025) 1px, transparent 1px); background-size: 8px 8px; }
+.ornament { width: 44px; height: 1px; background: #c99d72; display: inline-block; vertical-align: middle; }
+
+.wedding-primary { color: var(--wedding-primary, #173f3b); }
+.wedding-accent { color: var(--wedding-accent, #b38a62); }

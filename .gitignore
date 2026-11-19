@@ -2,3 +2,6 @@ node_modules
 .next
 .env*.local
 .env
+
+# Local runtime uploads
+/public/uploads/
