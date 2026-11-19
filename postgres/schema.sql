@@ -78,3 +78,19 @@ create table if not exists custom_sections (
   enabled boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+create table if not exists invitations (
+  id bigint generated always as identity primary key,
+  code text unique not null,
+  household_name text not null,
+  email text,
+  phone text,
+  allowed_guests int not null default 1 check (allowed_guests between 1 and 10),
+  expires_at timestamptz,
+  status text not null default 'active' check (status in ('active','used','revoked','expired')),
+  used_at timestamptz,
+  rsvp_id bigint references rsvps(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists invitations_code_idx on invitations(code);

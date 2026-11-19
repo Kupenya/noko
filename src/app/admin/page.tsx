@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Editor, { Col } from '@/components/Editor'
 import SectionManager from '@/components/SectionManager'
+import InvitationsManager from '@/components/InvitationsManager'
 
 const T: Col['type'] = 'text'
 const tabs: Record<string, { cols: Col[]; single?: boolean; noAdd?: boolean; csv?: boolean }> = {
@@ -21,6 +22,7 @@ const tabs: Record<string, { cols: Col[]; single?: boolean; noAdd?: boolean; csv
   Reservations: { table: 'reservations', noAdd: true, csv: true, cols: [{ key: 'item_id', label: 'Item ID', readonly: true }, { key: 'guest_name', label: 'Real name (private)' }, { key: 'display_name', label: 'Name shown publicly' }, { key: 'status', label: 'Status', type: 'select', options: ['pending', 'confirmed', 'removed'] }] },
   Gallery: { table: 'gallery_images', cols: [{ key: 'position', label: 'Order', type: 'number' }, { key: 'image', label: 'Photo', type: 'image' }, { key: 'caption', label: 'Caption' }] },
   FAQ: { table: 'faqs', cols: [{ key: 'position', label: 'Order', type: 'number' }, { key: 'question', label: 'Question' }, { key: 'answer', label: 'Answer', type: 'textarea' }] },
+  Invitations: { table: 'invitations', noAdd: true, cols: [] },
 } as any
 
 export default function Admin() {
@@ -61,7 +63,7 @@ export default function Admin() {
             {card('RSVP responses', stats.rsvps)}{card('Attending', stats.yes)}{card('Guests attending', stats.guests)}
             {card('Declined', stats.no)}{card('Gifts reserved', stats.reserved)}{card('Awaiting confirmation', stats.pending)}
             {card('Reserved value', Number(stats.value || 0).toLocaleString())}</div>
-            : tab === 'Section Manager' ? <SectionManager onEdit={setTab} /> : <Editor key={tab} table={cfg.table} cols={cfg.cols} single={cfg.single} noAdd={cfg.noAdd} csv={cfg.csv} />}
+            : tab === 'Section Manager' ? <SectionManager onEdit={setTab} /> : tab === 'Invitations' ? <InvitationsManager /> : <Editor key={tab} table={cfg.table} cols={cfg.cols} single={cfg.single} noAdd={cfg.noAdd} csv={cfg.csv} />}
         </div>
       </main>
     </div>)

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function RsvpForm() {
   const [f, setF] = useState<any>({
@@ -12,16 +12,29 @@ export default function RsvpForm() {
   });
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [err, setErr] = useState("");
+  const [code, setCode] = useState("");
+  const [allowedGuests, setAllowedGuests] = useState(10);
+  const [invitationName, setInvitationName] = useState("");
+  const [validated, setValidated] = useState(false);
+  const [checking, setChecking] = useState(false);
   const set = (k: string, v: any) => setF({ ...f, [k]: v });
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validated) {
+      setErr("Enter and validate your invitation code first.");
+      return;
+    }
     setState("sending");
     setErr("");
     const r = await fetch("/api/rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(f),
+      body: JSON.stringify({
+        ...f,
+        code,
+        guests: Math.min(Number(f.guests) || 1, allowedGuests),
+      }),
     });
     if (r.ok) setState("done");
     else {
@@ -30,6 +43,49 @@ export default function RsvpForm() {
       );
       setState("idle");
     }
+  }
+
+  useEffect(() => {
+    const urlCode =
+      new URLSearchParams(window.location.search).get("code") ||
+      new URLSearchParams(window.location.hash.replace(/^#[^?]*\??/, "")).get(
+        "code",
+      );
+    if (urlCode) {
+      setCode(urlCode.toUpperCase());
+      validate(urlCode.toUpperCase());
+    }
+  }, []);
+
+  async function validate(invitationCode = code) {
+    setChecking(true);
+    setErr("");
+    const r = await fetch("/api/invitations/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: invitationCode }),
+    });
+    const body = await r.json();
+    setChecking(false);
+    if (!r.ok) {
+      setValidated(false);
+      setErr(body.error || "This invitation could not be validated.");
+      return;
+    }
+    setValidated(true);
+    setInvitationName(body.householdName || "");
+    setAllowedGuests(Number(body.allowedGuests) || 10);
+    setF((current: any) => ({
+      ...current,
+      name: body.rsvp?.name || body.householdName || current.name,
+      email: body.rsvp?.email || current.email,
+      attending: body.rsvp ? !!body.rsvp.attending : true,
+      guests: body.rsvp
+        ? Math.min(body.rsvp.guests || 1, body.allowedGuests || 10)
+        : 1,
+      dietary: body.rsvp?.dietary || current.dietary,
+      message: body.rsvp?.message || current.message,
+    }));
   }
 
   if (state === "done")
@@ -55,6 +111,60 @@ export default function RsvpForm() {
       onSubmit={submit}
       className="max-w-3xl mx-auto bg-[#fffdfa] border border-[#173f3b]/10 p-6 md:p-10 shadow-[0_20px_60px_rgba(45,70,62,.07)]"
     >
+      {!validated && (
+        <div className="mb-7 bg-[#edf1ec] border border-[#173f3b]/10 p-5 rounded-[4px]">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#65706d]">
+            Private RSVP
+          </p>
+          <p className="mt-2 font-display text-2xl text-[#173f3b]">
+            Enter your invitation code
+          </p>
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <input
+              className="inp !mt-0 uppercase tracking-[0.18em]"
+              placeholder="ABCD-1234"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+            />
+            <button
+              type="button"
+              className="btn !min-h-[48px] sm:min-w-36"
+              disabled={checking}
+              onClick={() => validate()}
+            >
+              {checking ? "Checking…" : "Validate"}
+            </button>
+          </div>
+          {invitationName && (
+            <p className="mt-3 text-sm text-[#65706d]">
+              Invitation for {invitationName}
+            </p>
+          )}
+        </div>
+      )}
+      {validated && (
+        <div className="mb-7 flex items-center justify-between gap-3 bg-[#edf1ec] border border-[#173f3b]/10 p-4 rounded-[4px]">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[#65706d]">
+              Invitation validated
+            </p>
+            <p className="mt-1 font-display text-xl text-[#173f3b]">
+              {invitationName}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="text-xs text-[#65706d] underline"
+            onClick={() => {
+              setValidated(false);
+              setCode("");
+              setInvitationName("");
+            }}
+          >
+            Change code
+          </button>
+        </div>
+      )}
       <div className="grid md:grid-cols-2 gap-5">
         <label>
           <span className="text-[10px] uppercase tracking-[0.16em] text-[#65706d]">
@@ -93,7 +203,11 @@ export default function RsvpForm() {
               type="button"
               key={String(v)}
               onClick={() => set("attending", v)}
-              className={`py-4 px-5 rounded-[3px] border text-sm transition-all ${f.attending === v ? "bg-[#173f3b] text-white border-[#173f3b] shadow-lg" : "bg-[#f8f5ef] text-[#65706d] border-[#173f3b]/10 hover:border-[#173f3b]/30"}`}
+              className={`py-4 px-5 rounded-[3px] border text-sm transition-all ${
+                f.attending === v
+                  ? "bg-[#173f3b] text-white border-[#173f3b] shadow-lg"
+                  : "bg-[#f8f5ef] text-[#65706d] border-[#173f3b]/10 hover:border-[#173f3b]/30"
+              }`}
             >
               {v ? "Joyfully accept" : "Regretfully decline"}
             </button>
@@ -111,7 +225,7 @@ export default function RsvpForm() {
               className="inp mt-2"
               type="number"
               min={1}
-              max={10}
+              max={allowedGuests}
               value={f.guests}
               onChange={(e) => set("guests", e.target.value)}
             />
