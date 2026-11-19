@@ -74,19 +74,38 @@ export default function Editor({ table, cols, single, noAdd, csv }: { table: str
   async function upload(i: number, key: string, file?: File) {
     if (!file) return
     setLoading(true)
-    const form = new FormData()
-    form.append('file', file)
-    const response = await fetch('/api/admin/upload', { method: 'POST', body: form })
-    const body = await response.json()
-    setLoading(false)
-    if (!response.ok) {
-      setModal({ type: 'save', row: { title: 'Upload failed', message: body.error || 'Please choose another file.' } })
-      return
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 90000)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const response = await fetch('/api/admin/upload', { method: 'POST', body: form, signal: controller.signal })
+      clearTimeout(timeout)
+      const body = await response.json().catch(() => ({}))
+      setLoading(false)
+
+      if (!response.ok) {
+        setModal({ type: 'save', row: { title: 'Upload failed', message: body.error || 'Please choose a smaller image and try again.' } })
+        return
+      }
+
+      const updated = { ...rows[i], [key]: body.url }
+      upd(i, key, body.url)
+      await save(updated)
+    } catch (error: any) {
+      clearTimeout(timeout)
+      setLoading(false)
+      setModal({
+        type: 'save',
+        row: {
+          title: 'Upload could not finish',
+          message: error?.name === 'AbortError'
+            ? 'The upload took too long. Use an image under 4 MB and try again.'
+            : 'The upload connection failed. Check the image and try again.',
+        },
+      })
     }
-    const updated = { ...rows[i], [key]: body.url }
-    upd(i, key, body.url)
-    await save(updated)
-    setModal({ type: 'save', row: { title: 'Media uploaded', message: 'Press Save to publish this update to the wedding website.' } })
   }
   function exportCsv() {
     const keys = ['created_at', ...cols.map(c => c.key)]
